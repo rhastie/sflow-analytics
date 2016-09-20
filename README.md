@@ -1,18 +1,19 @@
 # sFlow-Analytics
 
-Platform an filter to allow sFlow data to be parsed into Elastic using LogStash. The output can then be visualised using Kibana
+Platform and filter to allow sFlow data to be parsed into Elastic using LogStash. The output can then be visualised using Kibana
 
 To accelerate the process I have written a LogStash filter called "sFlow-filter"
 
 ## To get this working you need the following prerecs:
-- Install ElasticSearch
+- Install Elastic
 - Install LogStash
 - Install Kibana
 - Install sFlowtool (see my other repo's)
 
 ##Quick Install
-- Create and place the YAML files in /etc/logstash/dictionaries
-- Copy SflowTool and sflowtool_wrapper.sh to /usr/local/bin and apply approriate permissions
+- Compile sFlowTool - See other repo
+- Create directory and place the YAML files in /etc/logstash/dictionaries
+- Copy SflowTool and sflowtool_wrapper.sh to /usr/local/bin and apply approriate exec permissions
 - Install translate plugin into Logstash - /opt/logstash/bin/logstash-plugin install logstash-filter-translate
 - Run LogStash with filter - /opt/logstash/bin/logstash -f sflow-filter
 

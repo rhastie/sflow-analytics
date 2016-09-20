@@ -1,6 +1,4 @@
-#################
-# Sflow Filters #
-#################
+# Sflow Filter for LogStash
 
 filter {
 
@@ -28,7 +26,7 @@ filter {
 #   Invaluable, and self-explanatory.
 
         grok {
-            match => { "message" => "%{WORD:SampleType},%{IP:sflow.ReporterIP},%{WORD:sflow.inputPort},%{WORD:sflow.outputPort},%{WORD:sflow.srcMAC},%{WORD:sflow.dstMAC},%{WORD:sflow.EtherType},%{NUMBER:sflow.in_vlan},%{NUMBER:sflow.out_vlan},%{IP:sflow.srcIP},%{IP:sflow.dstIP},%{NUMBER:sflow.IPProtocol},%{WORD:sflow.IPTOS},%{WORD:sflow.IPTTL},%{NUMBER:sflow.srcPort},%{NUMBER:sflow.dstPort},%{DATA:sflow.tcpFlags},%{NUMBER:sflow.PacketSize},%{NUMBER:sflow.IPSize},%{NUMBER:sflow.SampleRate}" }
+            match => { "message" => "%{WORD:SampleType},%{IP:sflow_ReporterIP},%{WORD:sflow_inputPort},%{WORD:sflow_outputPort},%{WORD:sflow_srcMAC},%{WORD:sflow_dstMAC},%{WORD:sflow_EtherType},%{NUMBER:sflow_in_vlan},%{NUMBER:sflow_out_vlan},%{IP:sflow_srcIP},%{IP:sflow_dstIP},%{NUMBER:sflow_IPProtocol},%{WORD:sflow_IPTOS},%{WORD:sflow_IPTTL},%{NUMBER:sflow_srcPort},%{NUMBER:sflow_dstPort},%{DATA:sflow_tcpFlags},%{NUMBER:sflow_PacketSize},%{NUMBER:sflow_IPSize},%{NUMBER:sflow_SampleRate}" }
         }
 
 # Sometimes it doesn't work out.
@@ -45,9 +43,9 @@ filter {
 
         mutate {
             add_field => {
-                "[sflow.SrcHostname]" => "%{sflow.srcIP}"
-                "[sflow.DstHostname]" => "%{sflow.dstIP}"
-                "[sflow.ReporterName]" => "%{sflow.ReporterIP}"
+                "[sflow_SrcHostname]" => "%{sflow_srcIP}"
+                "[sflow_DstHostname]" => "%{sflow_dstIP}"
+                "[sflow_ReporterName]" => "%{sflow_ReporterIP}"
             }
         }
 
@@ -59,84 +57,84 @@ filter {
 # other Gists.
 
         translate {
-            field => "[sflow.srcPort]"
-            destination => "[sflow.SrcSvcName]"
+            field => "[sflow_srcPort]"
+            destination => "[sflow_SrcSvcName]"
             dictionary_path => "/etc/logstash/dictionaries/iana_services.yaml"
         }
 
         translate {
-            field => "[sflow.dstPort]"
-            destination => "[sflow.DstSvcName]"
+            field => "[sflow_dstPort]"
+            destination => "[sflow_DstSvcName]"
             dictionary_path => "/etc/logstash/dictionaries/iana_services.yaml"
         }
 
         translate {
-            field => "[sflow.IPProtocol]"
-            destination => "[sflow.ProtName]"
+            field => "[sflow_IPProtocol]"
+            destination => "[sflow_ProtName]"
             dictionary_path => "/etc/logstash/dictionaries/iana_protocols.yaml"
         }
 
         translate {
-            field => "[sflow.tcpFlags]"
-            destination => "[sflow.TCPFlagDecode]"
+            field => "[sflow_tcpFlags]"
+            destination => "[sflow_TCPFlagDecode]"
             dictionary_path => "/etc/logstash/dictionaries/tcp_flags.yaml"
         }
 
 # Here we do our DNS reverse lookups:
 
         dns {
-            reverse => [ "sflow.SrcHostname" ]
+            reverse => [ "sflow_SrcHostname" ]
             action => "replace"
         }
 
         dns {
-            reverse => [ "sflow.DstHostname" ]
+            reverse => [ "sflow_DstHostname" ]
             action => "replace"
         }
 
         dns {
-            reverse => [ "sflow.ReporterName" ]
+            reverse => [ "sflow_ReporterName" ]
             action => "replace"
         }
 
 # If the reverse lookup didn't fail (leaving us with
 # nothing but numerics) we grok the FQDN, parsing it
 # into a HOST and DOMAIN - and then we store the
-# HOST portion into a new field - sflow.SrcHost
+# HOST portion into a new field - sflow_SrcHost
 #
 # Otherwise, we just dump the unresolved IP address
-# into the sflow.SrcHostname field.
+# into the sflow_SrcHostname field.
 
-        if [sflow.SrcHostname] !~ /(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)/ {
+        if [sflow_SrcHostname] !~ /(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)/ {
             grok {
-                match => [ "[sflow.SrcHostname]", "%{DATA:src_host}\.%{GREEDYDATA:domain}" ]
-                add_field => { "[sflow.SrcHost]" => "%{src_host}" }
+                match => [ "[sflow_SrcHostname]", "%{DATA:src_host}\.%{GREEDYDATA:domain}" ]
+                add_field => { "[sflow_SrcHost]" => "%{src_host}" }
             }
         } else {
             mutate {
-                add_field => [ "[sflow.SrcHost]", "%{[sflow.SrcHostname}" ]
+                add_field => [ "[sflow_SrcHost]", "%{[sflow_SrcHostname}" ]
             }
         }
 
-        if [sflow.DstHostname] !~ /(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)/ {
+        if [sflow_DstHostname] !~ /(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)/ {
             grok {
-                match => [ "[sflow.DstHostname]", "%{DATA:dst_host}\.%{GREEDYDATA:domain}" ]
-                add_field => { "[sflow.DstHost]" => "%{dst_host}" }
+                match => [ "[sflow_DstHostname]", "%{DATA:dst_host}\.%{GREEDYDATA:domain}" ]
+                add_field => { "[sflow_DstHost]" => "%{dst_host}" }
             }
         } else {
             mutate {
-                add_field => [ "[sflow.DstHost]", "%{[sflow.DstHostname}" ]
+                add_field => [ "[sflow_DstHost]", "%{[sflow_DstHostname}" ]
             }
         }
 
-        if [sflow.ReporterName] !~ /(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)/ {
+        if [sflow_ReporterName] !~ /(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)/ {
             grok {
-                match => [ "[sflow.ReporterName]", "%{DATA:rep_host}(\.|\-)" ]
-                add_field => { "[sflow.Reporter" => "%{rep_host}" }
+                match => [ "[sflow_ReporterName]", "%{DATA:rep_host}(\.|\-)" ]
+                add_field => { "[sflow_Reporter" => "%{rep_host}" }
             }
         } else {
             mutate {
-                add_field => [ "[sflow.Reporter]", "%{[sflow.ReporterName}" ]
+                add_field => [ "[sflow_Reporter]", "%{[sflow_ReporterName}" ]
             }
         }
 
@@ -145,8 +143,12 @@ filter {
 # that I don't care to store.  Here's where I drop
 # them all.
 
+#       mutate {
+#           remove_field => [ "host", "command", "sflow_inputPort", "sflow_outputPort", "sflow_srcMAC", "sflow_dstMAC", "sflow_EtherType", "sflow_in_vlan", "sflow_out_vlan", "sflow_IPTTL", "sflow_IPSize", "message", "src_host", "dst_host", "rep_host", "SampleType", "domain" ]
+#       }
+
         mutate {
-            remove_field => [ "host", "command", "sflow.inputPort", "sflow.outputPort", "sflow.srcMAC", "sflow.dstMAC", "sflow.EtherType", "sflow.in_vlan", "sflow.out_vlan", "sflow.IPTTL", "sflow.IPSize", "message", "src_host", "dst_host", "rep_host", "SampleType", "domain" ]
+            remove_field => [ "host", "command", "message", "src_host", "dst_host", "rep_host", "SampleType", "domain" ]
         }
 
 # Lastly, we're going to want Kibana and
@@ -158,8 +160,8 @@ filter {
 
         mutate {
                 convert => {
-                        "sflow.PacketSize" => "integer"
-                        "sflow.SampleRate" => "integer"
+                        "sflow_PacketSize" => "integer"
+                        "sflow_SampleRate" => "integer"
                 }
         }
 
